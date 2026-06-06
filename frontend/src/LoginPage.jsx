@@ -56,7 +56,7 @@ export default function LoginPage() {
       {/* Auth Card */}
       <div className="card card--auth">
         {/* Logo */}
-        <Link to="/" className="sidebar__logo" id="login-logo" style={{ marginBottom: 'var(--space-6)' }}>
+        <Link to="/" className="sidebar__logo" id="login-logo" style={{ marginBottom: 'var(--space-6)', display: 'inline-flex' }}>
           <svg
             className="sidebar__logo-mark"
             width="28"
