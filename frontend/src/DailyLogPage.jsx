@@ -48,42 +48,67 @@ const JournalIcon = () => (
   </svg>
 );
 
-/* ── Semi-circular Gauge Component ── */
+/* ── Speedometer-style Gauge Component ── */
 function Gauge({ value = 0, max = 100 }) {
   const pct = Math.min(Math.max(value / max, 0), 1);
-  const r = 16;
-  const circumference = Math.PI * r; // half-circle
-  const offset = circumference * (1 - pct);
+
+  // Needle angle: 0% → 180° (left), 100% → 0° (right)
+  const needleAngleDeg = 180 - pct * 180;
+  const needleAngleRad = (needleAngleDeg * Math.PI) / 180;
+
+  // Needle tip position (on the arc, radius ~13 so it sits inside the thick arc)
+  const needleLen = 13;
+  const cx = 20;
+  const cy = 22;
+  const tipX = cx + needleLen * Math.cos(needleAngleRad);
+  const tipY = cy - needleLen * Math.sin(needleAngleRad);
 
   return (
     <div className="gauge" title={`${Math.round(pct * 100)}%`}>
-      <svg className="gauge__svg" viewBox="0 0 40 24">
-        {/* Track (half circle) */}
+      <svg className="gauge__svg" viewBox="0 0 40 26" overflow="visible">
+        <defs>
+          {/* Gradient from light sand (left) to dark clay (right) */}
+          <linearGradient id={`gaugeGrad`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#D9A88E" />
+            <stop offset="100%" stopColor="#6E6052" />
+          </linearGradient>
+        </defs>
+
+        {/* Thick background track arc */}
         <path
           d="M4,22 A16,16 0 0,1 36,22"
           fill="none"
           stroke="var(--sand-200)"
-          strokeWidth="4"
+          strokeWidth="6"
           strokeLinecap="round"
         />
-        {/* Fill */}
+
+        {/* Filled progress arc with gradient */}
         <path
           d="M4,22 A16,16 0 0,1 36,22"
           fill="none"
-          stroke="var(--clay-500)"
-          strokeWidth="4"
+          stroke="url(#gaugeGrad)"
+          strokeWidth="6"
           strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
+          strokeDasharray={Math.PI * 16}
+          strokeDashoffset={Math.PI * 16 * (1 - pct)}
           style={{ transition: 'stroke-dashoffset 500ms ease' }}
         />
-        {/* Needle dot */}
-        {(() => {
-          const angle = Math.PI * (1 - pct);
-          const nx = 20 + 16 * Math.cos(angle);
-          const ny = 22 - 16 * Math.sin(angle);
-          return <circle cx={nx} cy={ny} r="2.5" fill="var(--clay-700)" />;
-        })()}
+
+        {/* Needle line — tapered from center-bottom to tip */}
+        <line
+          x1={cx}
+          y1={cy}
+          x2={tipX}
+          y2={tipY}
+          stroke="var(--clay-700)"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          style={{ transition: 'x2 500ms ease, y2 500ms ease' }}
+        />
+
+        {/* Center pivot dot */}
+        <circle cx={cx} cy={cy} r="2" fill="var(--clay-700)" />
       </svg>
     </div>
   );
