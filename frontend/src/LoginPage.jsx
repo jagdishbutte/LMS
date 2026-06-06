@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 /**
  * LifeTrack Login Page
@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
  * copied from /UI/shared/styles (such as tokens, reset, typography, layout, and components).
  */
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -40,11 +41,11 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
 
-    // Simulate API call
+    // Simulate API call → navigate to dashboard on success
     setTimeout(() => {
       setIsSubmitting(false);
-      // Handle login logic here
-    }, 1500);
+      navigate('/dashboard');
+    }, 1200);
   };
 
   return (
