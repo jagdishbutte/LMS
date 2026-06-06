@@ -95,7 +95,7 @@ export default function RegisterPage() {
           to="/"
           className="sidebar__logo"
           id="register-logo"
-          style={{ marginBottom: 'var(--space-6)' }}
+          style={{ marginBottom: 'var(--space-6)', display: 'inline-flex' }}
         >
           <svg
             className="sidebar__logo-mark"
@@ -228,7 +228,7 @@ export default function RegisterPage() {
         {/* Footer — Login link */}
         <div className="card__footer">
           <span className="text-sm text-secondary">Already have an account?</span>
-          <Link to="/" className="btn btn--ghost" id="register-login-link">
+          <Link to="/login" className="btn btn--ghost" id="register-login-link">
             Login
           </Link>
         </div>
