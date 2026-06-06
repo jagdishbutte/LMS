@@ -1,16 +1,7 @@
-import { useState } from 'react'
-import './App.css'
+import LoginPage from './LoginPage'
 
 function App() {
-  const [email, setEmail] = useState('')
-  
-  return (
-    <>
-    <div className="text-3xl font-bold underline">
-        LMS Frontend
-    </div>
-    </>
-  )
+  return <LoginPage />
 }
 
 export default App
