@@ -101,43 +101,16 @@
 /* ── Gauge / Speedometer ── */
 
 .gauge {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 30px;
   flex-shrink: 0;
-  position: relative;
+  align-self: flex-end;
+  margin-bottom: var(--space-1);
 }
 
 .gauge__svg {
   width: 100%;
   height: 100%;
-  transform: rotate(-90deg);
-}
-
-.gauge__track {
-  fill: none;
-  stroke: var(--sand-200);
-  stroke-width: 4;
-  stroke-linecap: round;
-}
-
-.gauge__fill {
-  fill: none;
-  stroke: var(--clay-500);
-  stroke-width: 4;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 500ms ease;
-}
-
-.gauge__needle {
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  width: 2px;
-  height: 16px;
-  background: var(--clay-700);
-  border-radius: 1px;
-  transform-origin: bottom center;
-  transition: transform 500ms ease;
 }
 
 
