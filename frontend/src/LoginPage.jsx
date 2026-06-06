@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 /**
  * LifeTrack Login Page
@@ -55,7 +56,7 @@ export default function LoginPage() {
       {/* Auth Card */}
       <div className="card card--auth">
         {/* Logo */}
-        <a href="/" className="sidebar__logo" id="login-logo" style={{ marginBottom: 'var(--space-6)' }}>
+        <Link to="/" className="sidebar__logo" id="login-logo" style={{ marginBottom: 'var(--space-6)' }}>
           <svg
             className="sidebar__logo-mark"
             width="28"
@@ -71,7 +72,7 @@ export default function LoginPage() {
             />
           </svg>
           <span className="sidebar__logo-text">LifeTrack</span>
-        </a>
+        </Link>
 
         {/* Title & Subtitle */}
         <h1 className="card__title" id="login-title">Welcome Back</h1>
@@ -170,9 +171,9 @@ export default function LoginPage() {
         {/* Footer — Register Link */}
         <div className="card__footer">
           <span className="text-sm text-secondary">Don't have an account?</span>
-          <a href="/register" className="btn btn--ghost" id="login-register-link">
+          <Link to="/register" className="btn btn--ghost" id="login-register-link">
             Register
-          </a>
+          </Link>
         </div>
 
         {/* Extra Link — Forgot Password */}
