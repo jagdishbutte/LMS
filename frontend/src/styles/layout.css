@@ -21,6 +21,20 @@
   padding: var(--space-6);
   max-width: var(--content-max-width);
   margin: 0 auto;
+  animation: page-enter 250ms ease-out both;
+}
+
+/* Gentle fade + rise when a page mounts (disabled via reset.css
+   for users who prefer reduced motion) */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Auth layout — no sidebar, no topnav */

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import botanicalShadow from './assets/botanical-shadow.png';
 
 /**
  * LifeTrack Landing Page
@@ -221,7 +222,7 @@ export default function LandingPage() {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  backgroundImage: 'url(/src/assets/botanical-shadow.png)',
+                  backgroundImage: `url(${botanicalShadow})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   opacity: 0.55,

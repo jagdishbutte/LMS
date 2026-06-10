@@ -145,7 +145,7 @@ export default function LoginPage() {
                 }}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? 'Hide' : 'Show/e'}
+                {showPassword ? 'Hide' : 'Show'}
               </span>
             </div>
             {errors.password && (
@@ -164,7 +164,9 @@ export default function LoginPage() {
             className="btn btn--primary btn--full mt-6"
             id="login-submit"
             disabled={isSubmitting}
+            aria-busy={isSubmitting}
           >
+            {isSubmitting && <span className="btn__spinner" aria-hidden="true" />}
             {isSubmitting ? 'Signing in…' : 'Sign In'}
           </button>
         </form>

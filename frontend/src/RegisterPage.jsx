@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 /**
  * LifeTrack Registration Page
@@ -14,7 +14,24 @@ import { Link } from 'react-router-dom';
  *  - Button:     btn btn--primary btn--full mt-6
  *  - Typography: text-sm, text-secondary, btn btn--ghost
  */
+/* ── Error helper markup ── */
+const ErrorMsg = ({ id, msg }) =>
+  msg ? (
+    <span
+      className="form-helper form-helper--error"
+      id={id}
+      role="alert"
+      style={{ marginTop: 'var(--space-1)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}
+    >
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10.5a.75.75 0 110-1.5.75.75 0 010 1.5zM8.75 4.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 011.5 0z" />
+      </svg>
+      {msg}
+    </span>
+  ) : null;
+
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const [fullName, setFullName]             = useState('');
   const [email, setEmail]                   = useState('');
   const [password, setPassword]             = useState('');
@@ -61,25 +78,12 @@ export default function RegisterPage() {
     evt.preventDefault();
     if (!validateForm()) return;
     setIsSubmitting(true);
-    // TODO: wire up to API
-    setTimeout(() => setIsSubmitting(false), 1500);
+    // TODO: wire up to API — simulate success → dashboard
+    setTimeout(() => {
+      setIsSubmitting(false);
+      navigate('/dashboard');
+    }, 1500);
   };
-
-  /* ── Error helper markup ── */
-  const ErrorMsg = ({ id, msg }) =>
-    msg ? (
-      <span
-        className="form-helper form-helper--error"
-        id={id}
-        role="alert"
-        style={{ marginTop: 'var(--space-1)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}
-      >
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-          <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10.5a.75.75 0 110-1.5.75.75 0 010 1.5zM8.75 4.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 011.5 0z" />
-        </svg>
-        {msg}
-      </span>
-    ) : null;
 
   return (
     <div className="app-shell--auth">
@@ -208,7 +212,7 @@ export default function RegisterPage() {
                 }}
                 aria-label={showPasswords ? 'Hide passwords' : 'Show passwords'}
               >
-                {showPasswords ? 'Hide' : 'Show/e'}
+                {showPasswords ? 'Hide' : 'Show'}
               </span>
             </div>
             <ErrorMsg id="confirm-password-error" msg={errors.confirmPassword} />
@@ -220,7 +224,9 @@ export default function RegisterPage() {
             className="btn btn--primary btn--full mt-6"
             id="register-submit"
             disabled={isSubmitting}
+            aria-busy={isSubmitting}
           >
+            {isSubmitting && <span className="btn__spinner" aria-hidden="true" />}
             {isSubmitting ? 'Creating account…' : 'Register'}
           </button>
         </form>
