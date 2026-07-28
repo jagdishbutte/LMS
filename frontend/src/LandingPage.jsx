@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import botanicalShadow from './assets/botanical-shadow.png';
 
 /**
  * LifeTrack Landing Page
@@ -41,7 +42,7 @@ export default function LandingPage() {
       <nav className="topnav topnav--full" style={{ position: 'relative', left: 0 }}>
         <div className="topnav__left">
           {/* Logo */}
-          <Link to="/" className="sidebar__logo" id="landing-logo">
+          <div className="sidebar__logo" id="landing-logo" aria-label="LifeTrack">
             <svg
               className="sidebar__logo-mark"
               width="28" height="28"
@@ -55,7 +56,7 @@ export default function LandingPage() {
               />
             </svg>
             <span className="sidebar__logo-text">LifeTrack</span>
-          </Link>
+          </div>
 
           {/* Nav links */}
           <div className="topnav__links" style={{ marginLeft: 'var(--space-8)' }}>
@@ -221,7 +222,7 @@ export default function LandingPage() {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  backgroundImage: 'url(/src/assets/botanical-shadow.png)',
+                  backgroundImage: `url(${botanicalShadow})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   opacity: 0.55,
@@ -283,7 +284,7 @@ export default function LandingPage() {
             }}
           >
             Focus on <strong style={{ color: 'var(--ink-900)', fontWeight: 'var(--weight-semibold)' }}>LifeTrack</strong>,
-            a human-centric AI lifestyle intelligence platform that helps you log,
+            a human-centric lifestyle intelligence platform that helps you log,
             understand, and improve every dimension of your daily life.
           </p>
 
@@ -385,7 +386,7 @@ export default function LandingPage() {
                   </svg>
                 ),
                 title: 'Journal & Reflect',
-                desc: 'Write, reflect and converse with an AI companion that understands your context.',
+                desc: 'Write and reflect on your day. A contextual AI companion is planned for a future release.',
               },
             ].map(({ icon, title, desc }) => (
               <div

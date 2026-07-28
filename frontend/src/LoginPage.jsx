@@ -1,18 +1,24 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from './lib/auth.jsx';
+import { ApiError } from './lib/api.js';
 
 /**
  * LifeTrack Login Page
- * 
- * Standard React implementation using ONLY classes from the global CSS folder
- * copied from /UI/shared/styles (such as tokens, reset, typography, layout, and components).
+ *
+ * Wired to Spring Boot's `POST /api/auth/login` via the AuthContext.
+ * Stores the JWT, hydrates the user, and redirects back to the page the
+ * visitor was trying to reach (or /dashboard on direct login).
  */
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
@@ -26,26 +32,35 @@ export default function LoginPage() {
 
     if (!password) {
       newErrors.password = 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (password.length < 8) {
+      // Must match the backend's @Size(min = 8) rule.
+      newErrors.password = 'Password must be at least 8 characters';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setFormError('');
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-
-    // Simulate API call → navigate to dashboard on success
-    setTimeout(() => {
+    try {
+      await login(email.trim(), password);
+      const next = location.state?.from || '/dashboard';
+      navigate(next, { replace: true });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.fieldErrors) setErrors((prev) => ({ ...prev, ...err.fieldErrors }));
+        setFormError(err.message || 'Unable to sign in. Please try again.');
+      } else {
+        setFormError('Something went wrong. Please try again.');
+      }
+    } finally {
       setIsSubmitting(false);
-      navigate('/dashboard');
-    }, 1200);
+    }
   };
 
   return (
@@ -57,7 +72,7 @@ export default function LoginPage() {
       {/* Auth Card */}
       <div className="card card--auth">
         {/* Logo */}
-        <Link to="/" className="sidebar__logo" id="login-logo" style={{ marginBottom: 'var(--space-6)', display: 'inline-flex' }}>
+        <div className="sidebar__logo" id="login-logo" aria-label="LifeTrack" style={{ marginBottom: 'var(--space-6)', display: 'inline-flex' }}>
           <svg
             className="sidebar__logo-mark"
             width="28"
@@ -73,7 +88,7 @@ export default function LoginPage() {
             />
           </svg>
           <span className="sidebar__logo-text">LifeTrack</span>
-        </Link>
+        </div>
 
         {/* Title & Subtitle */}
         <h1 className="card__title" id="login-title">Welcome Back</h1>
@@ -83,6 +98,15 @@ export default function LoginPage() {
 
         {/* Form */}
         <form className="card__body" onSubmit={handleSubmit} noValidate>
+          {formError && (
+            <div
+              role="alert"
+              className="form-helper form-helper--error"
+              style={{ marginBottom: 'var(--space-3)', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', background: 'rgba(181, 115, 79, 0.08)' }}
+            >
+              {formError}
+            </div>
+          )}
           {/* Email */}
           <div className="form-group">
             <input
@@ -145,7 +169,7 @@ export default function LoginPage() {
                 }}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? 'Hide' : 'Show/e'}
+                {showPassword ? 'Hide' : 'Show'}
               </span>
             </div>
             {errors.password && (
@@ -164,7 +188,9 @@ export default function LoginPage() {
             className="btn btn--primary btn--full mt-6"
             id="login-submit"
             disabled={isSubmitting}
+            aria-busy={isSubmitting}
           >
+            {isSubmitting && <span className="btn__spinner" aria-hidden="true" />}
             {isSubmitting ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
@@ -177,12 +203,6 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {/* Extra Link — Forgot Password */}
-        <div className="text-center mt-4">
-          <a href="#" className="btn btn--ghost text-sm" id="login-forgot-password">
-            Forgot Password?
-          </a>
-        </div>
       </div>
     </div>
   );

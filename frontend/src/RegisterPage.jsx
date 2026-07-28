@@ -1,26 +1,41 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from './lib/auth.jsx';
+import { ApiError } from './lib/api.js';
 
 /**
  * LifeTrack Registration Page
  *
- * Uses ONLY classes from the global CSS (src/styles/main.css):
- *  - Layout:     app-shell--auth, botanical-overlay, mesh-overlay
- *  - Card:       card card--auth, card__title, card__subtitle, card__body, card__footer
- *  - Logo:       sidebar__logo, sidebar__logo-mark, sidebar__logo-text
- *  - Inputs:     form-group, form-input, form-input--auth, form-input--error,
- *                form-input-wrapper, form-input-wrapper__suffix
- *  - Feedback:   form-helper, form-helper--error
- *  - Button:     btn btn--primary btn--full mt-6
- *  - Typography: text-sm, text-secondary, btn btn--ghost
+ * Wired to Spring Boot's `POST /api/auth/register` via the AuthContext.
+ * Server-side validation errors (duplicate email, password rules) surface
+ * either as a top-of-form banner or as individual field errors.
  */
+/* ── Error helper markup ── */
+const ErrorMsg = ({ id, msg }) =>
+  msg ? (
+    <span
+      className="form-helper form-helper--error"
+      id={id}
+      role="alert"
+      style={{ marginTop: 'var(--space-1)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}
+    >
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10.5a.75.75 0 110-1.5.75.75 0 010 1.5zM8.75 4.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 011.5 0z" />
+      </svg>
+      {msg}
+    </span>
+  ) : null;
+
 export default function RegisterPage() {
+  const navigate = useNavigate();
+  const { register } = useAuth();
   const [fullName, setFullName]             = useState('');
   const [email, setEmail]                   = useState('');
   const [password, setPassword]             = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswords, setShowPasswords]   = useState(false);
   const [errors, setErrors]                 = useState({});
+  const [formError, setFormError]           = useState('');
   const [isSubmitting, setIsSubmitting]     = useState(false);
 
   /* ── Validation ── */
@@ -57,29 +72,25 @@ export default function RegisterPage() {
     setErrors((prev) => ({ ...prev, [field]: '' }));
 
   /* ── Submit ── */
-  const handleSubmit = (evt) => {
+  const handleSubmit = async (evt) => {
     evt.preventDefault();
+    setFormError('');
     if (!validateForm()) return;
     setIsSubmitting(true);
-    // TODO: wire up to API
-    setTimeout(() => setIsSubmitting(false), 1500);
+    try {
+      await register(fullName.trim(), email.trim(), password);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.fieldErrors) setErrors((prev) => ({ ...prev, ...err.fieldErrors }));
+        setFormError(err.message || 'Unable to create your account. Please try again.');
+      } else {
+        setFormError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  /* ── Error helper markup ── */
-  const ErrorMsg = ({ id, msg }) =>
-    msg ? (
-      <span
-        className="form-helper form-helper--error"
-        id={id}
-        role="alert"
-        style={{ marginTop: 'var(--space-1)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}
-      >
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-          <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10.5a.75.75 0 110-1.5.75.75 0 010 1.5zM8.75 4.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 011.5 0z" />
-        </svg>
-        {msg}
-      </span>
-    ) : null;
 
   return (
     <div className="app-shell--auth">
@@ -91,10 +102,10 @@ export default function RegisterPage() {
       <div className="card card--auth">
 
         {/* Logo */}
-        <Link
-          to="/"
+        <div
           className="sidebar__logo"
           id="register-logo"
+          aria-label="LifeTrack"
           style={{ marginBottom: 'var(--space-6)', display: 'inline-flex' }}
         >
           <svg
@@ -112,7 +123,7 @@ export default function RegisterPage() {
             />
           </svg>
           <span className="sidebar__logo-text">LifeTrack</span>
-        </Link>
+        </div>
 
         {/* Title & subtitle */}
         <h1 className="card__title" id="register-title">Begin Your Journey</h1>
@@ -122,6 +133,15 @@ export default function RegisterPage() {
 
         {/* Form */}
         <form className="card__body" onSubmit={handleSubmit} noValidate>
+          {formError && (
+            <div
+              role="alert"
+              className="form-helper form-helper--error"
+              style={{ marginBottom: 'var(--space-3)', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', background: 'rgba(181, 115, 79, 0.08)' }}
+            >
+              {formError}
+            </div>
+          )}
 
           {/* Full Name */}
           <div className="form-group">
@@ -208,7 +228,7 @@ export default function RegisterPage() {
                 }}
                 aria-label={showPasswords ? 'Hide passwords' : 'Show passwords'}
               >
-                {showPasswords ? 'Hide' : 'Show/e'}
+                {showPasswords ? 'Hide' : 'Show'}
               </span>
             </div>
             <ErrorMsg id="confirm-password-error" msg={errors.confirmPassword} />
@@ -220,7 +240,9 @@ export default function RegisterPage() {
             className="btn btn--primary btn--full mt-6"
             id="register-submit"
             disabled={isSubmitting}
+            aria-busy={isSubmitting}
           >
+            {isSubmitting && <span className="btn__spinner" aria-hidden="true" />}
             {isSubmitting ? 'Creating account…' : 'Register'}
           </button>
         </form>
