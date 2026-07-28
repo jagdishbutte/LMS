@@ -30,8 +30,41 @@ body {
   font-weight: var(--weight-regular);
   color: var(--color-text-primary);
   background-color: var(--color-bg-app);
+  background-image: var(--gradient-app);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Brand-tinted text selection */
+::selection {
+  background: var(--clay-100);
+  color: var(--ink-900);
+}
+
+/* Slim warm scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sand-300) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sand-300);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--sand-50);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--taupe-400);
 }
 
 /* Remove list styles */
