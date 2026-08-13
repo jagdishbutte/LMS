@@ -6,23 +6,24 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
 import java.time.LocalDate;
 
 /**
- * A dated expense owned by one user.
+ * A dated free-text reflection and its user-selected mood.
  *
- * <p>Category remains server-controlled vocabulary while indexes support the
- * date-range queries used by expenses and analytics.</p>
+ * <p>Entries remain separate from daily logs because users may create and edit
+ * reflections independently of structured wellbeing check-ins.</p>
  */
 @Entity
-@Table(name = "expenses", indexes = {
-        @Index(name = "idx_expense_user", columnList = "userId"),
-        @Index(name = "idx_expense_user_date", columnList = "userId,date")
+@Table(name = "journal_entries", indexes = {
+        @Index(name = "idx_journal_user", columnList = "userId"),
+        @Index(name = "idx_journal_user_date", columnList = "userId,date")
 })
-public class Expense {
+public class JournalEntry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,15 +35,18 @@ public class Expense {
     @Column(nullable = false)
     private LocalDate date;
 
-    // One of: Food, Housing, Travel, Wellness, Misc
-    @Column(nullable = false, length = 40)
-    private String category;
+    // One of: happy, calm, anxious, grateful, tired
+    @Column(length = 40)
+    private String mood;
 
-    @Column(nullable = false)
-    private double amount;
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String text;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    private Instant updatedAt = Instant.now();
 
     public Long getId() {
         return id;
@@ -68,20 +72,20 @@ public class Expense {
         this.date = date;
     }
 
-    public String getCategory() {
-        return category;
+    public String getMood() {
+        return mood;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setMood(String mood) {
+        this.mood = mood;
     }
 
-    public double getAmount() {
-        return amount;
+    public String getText() {
+        return text;
     }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
+    public void setText(String text) {
+        this.text = text;
     }
 
     public Instant getCreatedAt() {
@@ -90,5 +94,13 @@ public class Expense {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
