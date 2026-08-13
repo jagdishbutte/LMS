@@ -87,6 +87,10 @@ class LifestyleContext(BaseModel):
     habit_consistency_threshold: float = Field(default=0.5, ge=0, le=1)
     mood_counts: Dict[str, int] = Field(default_factory=dict)
     journal_excerpts: List[str] = Field(default_factory=list, max_length=20)
+    avg_steps: Optional[float] = Field(default=None, ge=0)
+    today_steps: Optional[int] = Field(default=None, ge=0)
+    min_steps: Optional[int] = Field(default=10000, ge=0)
+    local_time: Optional[str] = Field(default=None, max_length=100)
     notes: Optional[str] = Field(default=None, max_length=2000)
 
 
@@ -233,3 +237,105 @@ class VectorSearchResponse(BaseModel):
 class VectorDeleteResponse(BaseModel):
     user_key_hash: str
     deleted: bool
+
+
+# ---------------------------------------------------------------------------
+# /command
+# ---------------------------------------------------------------------------
+class CommandTarget(str, Enum):
+    CHAT = "chat"
+    EXPENSE = "expense"
+    DAILY_LOG = "daily_log"
+
+
+class CommandStatus(str, Enum):
+    SUCCESS = "success"
+    CLARIFICATION_NEEDED = "clarification_needed"
+    ERROR = "error"
+
+
+class CommandRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    target: CommandTarget
+    text: str = Field(min_length=1, max_length=4000)
+    date: str = Field(min_length=1, max_length=32, description="User's PC-local date (YYYY-MM-DD)")
+    history: Optional[List[ChatMessage]] = Field(default_factory=list, description="Recent conversation turns")
+    model: Optional[str] = Field(default=None, description="Override LLM model")
+
+
+class ExtractedExpensePayload(BaseModel):
+    """One single expense. A message may describe several — see
+    :class:`ExtractedExpenseList`."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    date: Optional[str] = Field(default=None, description="Date in YYYY-MM-DD format")
+    # The allowed values are injected into the prompt from
+    # Settings.expense_category_list, because they are deployment-configurable
+    # and must match Spring's app.reference.expense-categories. Do not restate
+    # a literal list here: this description is sent to the model as part of the
+    # json_schema, and a stale copy contradicts the system prompt.
+    category: Optional[str] = Field(
+        default=None,
+        description="One of the expense categories listed in the system prompt",
+    )
+    # Deliberately NOT constrained with gt=0 here. Validation is per-list, so one
+    # malformed sibling would fail the whole ExtractedExpenseList and discard the
+    # valid expenses next to it — observed with a model emitting amount: 0 for an
+    # expense the user never priced. The /command handler drops non-positive
+    # amounts instead, which loses only the bad entry.
+    amount: Optional[float] = Field(default=None, description="Expense amount; must be > 0 to be usable")
+
+
+class ExtractedExpenseList(BaseModel):
+    """Every expense found in one message.
+
+    One utterance often contains more than one spend ("ate for 500 and sent 344
+    to the house owner" is two). Extraction is therefore list-shaped: a
+    single-object schema would force the model to discard all but one, which is
+    exactly the bug this replaces.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    expenses: List[ExtractedExpensePayload] = Field(default_factory=list, max_length=10)
+
+
+class ExtractedMeal(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, description="Meal name e.g. Breakfast, Lunch, High Tea, Dinner, Snacks, Brunch")
+    items: List[str] = Field(default_factory=list, description="Food items")
+
+
+class ExtractedDailyLogPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date: Optional[str] = Field(default=None, description="Date in YYYY-MM-DD format")
+    sleepHours: Optional[float] = Field(default=None, ge=0, le=24)
+    stepTarget: Optional[int] = Field(default=None, gt=0)
+    waterIntake: Optional[float] = Field(default=None, ge=0)
+    sleepQuality: Optional[int] = Field(default=None, ge=1, le=5)
+    stressLevel: Optional[int] = Field(default=None, ge=1, le=5)
+    energyLevel: Optional[int] = Field(default=None, ge=1, le=5)
+    productivityLevel: Optional[int] = Field(default=None, ge=1, le=5)
+    dayType: Optional[str] = Field(default=None, description="STUDY_WORK, DAY_OFF, TRAVEL, SICK, UNUSUAL")
+    transactionalHabits: Optional[List[str]] = Field(default=None)
+    embeddedHabits: Optional[List[str]] = Field(default=None)
+    meals: Optional[List[ExtractedMeal]] = Field(default=None)
+    morningMood: Optional[str] = Field(default=None)
+    afternoonMood: Optional[str] = Field(default=None)
+    eveningMood: Optional[str] = Field(default=None)
+
+
+class CommandResponse(BaseModel):
+    target: CommandTarget
+    # First draft, kept so older callers keep working. Prefer `payloads`.
+    payload: Optional[Dict] = None
+    # Every draft extracted from the message, in the order they were mentioned.
+    # Expense extraction can yield more than one; daily_log always yields one,
+    # because a daily log is merged per date rather than appended.
+    payloads: List[Dict] = Field(default_factory=list)
+    status: CommandStatus
+    message: str
